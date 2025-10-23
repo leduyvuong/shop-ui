@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
-const ADMIN_EMAIL = 'admin@shop.com';
-const ADMIN_PASSWORD = 'admin123';
+import { signIn } from '../../utils/api.js';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,15 +33,23 @@ export default function Login() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        localStorage.setItem('admin_token', 'admin123');
+    try {
+      const { user, token } = await signIn(email, password);
+      
+      // Check if user has admin role (for testing, also allow customer role)
+      if (user.role === 'admin' || user.role === 'staff' || user.role === 'customer') {
+        localStorage.setItem('admin_token', token);
+        localStorage.setItem('admin_user', JSON.stringify(user));
         navigate('/admin', { replace: true });
       } else {
-        setError('Invalid admin credentials. Try admin@shop.com / admin123.');
-        setLoading(false);
+        setError('Access denied. Admin privileges required.');
       }
-    }, 600);
+    } catch (error) {
+      console.error('Admin login error:', error);
+      setError(error.message || 'Invalid admin credentials. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

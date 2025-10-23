@@ -42,6 +42,13 @@ export async function request(path, { method = 'GET', headers = {}, searchParams
   appendSearchParams(url, searchParams);
 
   const requestHeaders = new Headers({ Accept: 'application/json', ...headers });
+  
+  // Add JWT token if available
+  const token = window.localStorage.getItem('shop-auth-token') || window.localStorage.getItem('admin_token');
+  if (token) {
+    requestHeaders.set('Authorization', `Bearer ${token}`);
+  }
+  
   let requestBody = body;
 
   if (body && typeof body === 'object' && !(body instanceof FormData) && !(body instanceof URLSearchParams)) {
@@ -237,7 +244,7 @@ export async function fetchProducts(params = {}) {
 
   const payload = await request('/products', { searchParams });
   return {
-    products: mapProducts(payload?.data ?? []),
+    products: mapProducts(payload?.data?.products ?? []),
     meta: payload?.meta ?? null,
   };
 }
@@ -254,7 +261,7 @@ export async function fetchCategories(params = {}) {
   if (params.perPage) searchParams.set('per_page', params.perPage);
 
   const payload = await request('/categories', { searchParams });
-  return Array.isArray(payload?.data) ? payload.data : [];
+  return Array.isArray(payload?.data?.categories) ? payload.data.categories : [];
 }
 
 export async function fetchCategoryProducts(categoryId, params = {}) {
@@ -266,14 +273,14 @@ export async function fetchCategoryProducts(categoryId, params = {}) {
 
   const payload = await request(`/categories/${categoryId}/products`, { searchParams });
   return {
-    products: mapProducts(payload?.data ?? []),
+    products: mapProducts(payload?.data?.products ?? []),
     meta: payload?.meta ?? null,
   };
 }
 
 export async function fetchCart() {
   const payload = await request('/cart');
-  return mapCartItems(payload?.data ?? []);
+  return mapCartItems(payload?.data?.items ?? payload?.data ?? []);
 }
 
 export async function fetchUsers(params = {}) {
@@ -283,7 +290,7 @@ export async function fetchUsers(params = {}) {
 
   const payload = await request('/users', { searchParams });
   return {
-    users: mapUsers(payload?.data ?? []),
+    users: mapUsers(payload?.data?.users ?? []),
     meta: payload?.meta ?? null,
   };
 }
@@ -302,12 +309,136 @@ export async function fetchOrders(params = {}) {
 
   const payload = await request('/orders', { searchParams });
   return {
-    orders: mapOrders(payload?.data ?? []),
+    orders: mapOrders(payload?.data?.orders ?? []),
     meta: payload?.meta ?? null,
   };
 }
 
 export async function fetchAddresses() {
   const payload = await request('/addresses');
-  return mapAddresses(payload?.data ?? []);
+  return mapAddresses(payload?.data?.addresses ?? payload?.data ?? []);
+}
+
+// Authentication APIs
+export async function signUp(userData) {
+  const payload = await request('/auth/sign_up', {
+    method: 'POST',
+    body: { user: userData },
+  });
+  return {
+    user: mapUser(payload?.data?.user),
+    token: payload?.data?.token,
+  };
+}
+
+export async function signIn(email, password) {
+  const payload = await request('/auth/sign_in', {
+    method: 'POST',
+    body: { email, password },
+  });
+  return {
+    user: mapUser(payload?.data?.user),
+    token: payload?.data?.token,
+  };
+}
+
+export async function signOut() {
+  const payload = await request('/auth/sign_out', {
+    method: 'DELETE',
+  });
+  return payload;
+}
+
+export async function refreshToken(refreshToken) {
+  const payload = await request('/auth/refresh', {
+    method: 'POST',
+    body: { refresh_token: refreshToken },
+  });
+  return {
+    user: mapUser(payload?.data?.user),
+    token: payload?.data?.token,
+  };
+}
+
+// Cart APIs
+export async function addToCart(productId, quantity = 1) {
+  const payload = await request('/cart', {
+    method: 'POST',
+    body: {
+      cart_item: {
+        product_id: productId,
+        quantity: quantity,
+      },
+    },
+  });
+  return mapCartItem(payload?.data);
+}
+
+export async function updateCartItem(cartItemId, quantity) {
+  const payload = await request(`/cart/${cartItemId}`, {
+    method: 'PUT',
+    body: {
+      cart_item: {
+        quantity: quantity,
+      },
+    },
+  });
+  return mapCartItem(payload?.data);
+}
+
+export async function removeFromCart(cartItemId) {
+  const payload = await request(`/cart/${cartItemId}`, {
+    method: 'DELETE',
+  });
+  return payload;
+}
+
+// Order APIs
+export async function createOrder(orderData) {
+  const payload = await request('/orders', {
+    method: 'POST',
+    body: { order: orderData },
+  });
+  return mapOrder(payload?.data);
+}
+
+export async function getOrder(orderId) {
+  const payload = await request(`/orders/${orderId}`);
+  return mapOrder(payload?.data);
+}
+
+// Wishlist APIs (assuming they exist, if not we'll use localStorage)
+export async function addToWishlist(productId) {
+  try {
+    const payload = await request('/wishlist', {
+      method: 'POST',
+      body: { product_id: productId },
+    });
+    return mapProduct(payload?.data);
+  } catch (error) {
+    // If wishlist API doesn't exist, we'll handle it in context
+    throw error;
+  }
+}
+
+export async function removeFromWishlist(productId) {
+  try {
+    const payload = await request(`/wishlist/${productId}`, {
+      method: 'DELETE',
+    });
+    return payload;
+  } catch (error) {
+    // If wishlist API doesn't exist, we'll handle it in context
+    throw error;
+  }
+}
+
+export async function fetchWishlist() {
+  try {
+    const payload = await request('/wishlist');
+    return mapProducts(payload?.data || []);
+  } catch (error) {
+    // If wishlist API doesn't exist, we'll handle it in context
+    throw error;
+  }
 }

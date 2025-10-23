@@ -1,13 +1,46 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { createOrder } from '../utils/api.js';
 import { formatCurrency } from '../utils/format.js';
 
 export default function Cart() {
   const { items, loading, removeFromCart, updateQuantity, totals, clearCart } = useCart();
+  const { user } = useAuth();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
-  const handleCheckout = () => {
-    window.alert('Order placed successfully!');
-    clearCart();
+  const handleCheckout = async () => {
+    if (!user) {
+      setCheckoutError('Please login to place an order');
+      return;
+    }
+
+    setCheckoutLoading(true);
+    setCheckoutError('');
+
+    try {
+      // Create order with basic data
+      const orderData = {
+        address_id: 1, // You might want to implement address selection
+        payment_method: 'cod',
+        // Add any other required fields based on API documentation
+      };
+
+      const order = await createOrder(orderData);
+      
+      if (order) {
+        // Clear cart after successful order
+        clearCart();
+        window.alert(`Order placed successfully! Order ID: ${order.id}`);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setCheckoutError(error.message || 'Failed to place order. Please try again.');
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   if (loading) {
@@ -95,12 +128,18 @@ export default function Cart() {
             <span>{formatCurrency(totals.total)}</span>
           </div>
         </div>
+        {checkoutError && (
+          <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            {checkoutError}
+          </div>
+        )}
         <button
           type="button"
           onClick={handleCheckout}
-          className="mt-6 w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-primary-light"
+          disabled={checkoutLoading || !user}
+          className="mt-6 w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Checkout
+          {checkoutLoading ? 'Processing...' : !user ? 'Login to Checkout' : 'Checkout'}
         </button>
       </div>
     </div>

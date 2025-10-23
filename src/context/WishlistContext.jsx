@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { addToWishlist as apiAddToWishlist, removeFromWishlist as apiRemoveFromWishlist, fetchWishlist as apiFetchWishlist } from '../utils/api.js';
 
 const STORAGE_KEY = 'shop-wishlist-items';
 
@@ -24,27 +25,64 @@ const writeWishlist = (items) => {
 
 export function WishlistProvider({ children }) {
   const [items, setItems] = useState(() => readWishlist());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     writeWishlist(items);
   }, [items]);
 
-  const addToWishlist = (product) => {
-    setItems((prev) => {
-      if (prev.some((item) => item.id === product.id)) {
-        return prev;
-      }
-      return [...prev, product];
-    });
+  const loadWishlistFromApi = async () => {
+    setLoading(true);
+    try {
+      const apiItems = await apiFetchWishlist();
+      setItems(apiItems);
+    } catch (error) {
+      console.error('Failed to load wishlist from API:', error);
+      // Keep localStorage items if API fails
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeFromWishlist = (productId) => {
-    setItems((prev) => prev.filter((item) => item.id !== productId));
+  useEffect(() => {
+    loadWishlistFromApi();
+  }, []);
+
+  const addToWishlist = async (product) => {
+    try {
+      await apiAddToWishlist(product.id);
+      setItems((prev) => {
+        if (prev.some((item) => item.id === product.id)) {
+          return prev;
+        }
+        return [...prev, product];
+      });
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+      // Fallback to localStorage if API fails
+      setItems((prev) => {
+        if (prev.some((item) => item.id === product.id)) {
+          return prev;
+        }
+        return [...prev, product];
+      });
+    }
+  };
+
+  const removeFromWishlist = async (productId) => {
+    try {
+      await apiRemoveFromWishlist(productId);
+      setItems((prev) => prev.filter((item) => item.id !== productId));
+    } catch (error) {
+      console.error('Failed to remove from wishlist:', error);
+      // Fallback to localStorage if API fails
+      setItems((prev) => prev.filter((item) => item.id !== productId));
+    }
   };
 
   const value = useMemo(
-    () => ({ items, addToWishlist, removeFromWishlist }),
-    [items],
+    () => ({ items, loading, addToWishlist, removeFromWishlist, refreshWishlist: loadWishlistFromApi }),
+    [items, loading, loadWishlistFromApi],
   );
 
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;

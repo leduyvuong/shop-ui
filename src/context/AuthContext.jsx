@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { signIn, signUp, signOut as apiSignOut } from '../utils/api.js';
 
 const STORAGE_KEY = 'shop-auth-user';
-const USERS_KEY = 'shop-auth-users';
+const TOKEN_KEY = 'shop-auth-token';
 
 const AuthContext = createContext();
 
@@ -23,41 +24,69 @@ const writeJson = (key, value) => {
   }
 };
 
+const removeStorage = (key) => {
+  try {
+    window.localStorage.removeItem(key);
+  } catch (error) {
+    console.error('Failed to remove storage', error);
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => readJson(STORAGE_KEY, null));
+  const [token, setToken] = useState(() => window.localStorage.getItem(TOKEN_KEY));
 
   useEffect(() => {
-    if (user) {
+    if (user && token) {
       writeJson(STORAGE_KEY, user);
+      window.localStorage.setItem(TOKEN_KEY, token);
     } else {
-      window.localStorage.removeItem(STORAGE_KEY);
+      removeStorage(STORAGE_KEY);
+      removeStorage(TOKEN_KEY);
     }
-  }, [user]);
+  }, [user, token]);
 
-  const login = (email, password) => {
-    const users = readJson(USERS_KEY, []);
-    const existingUser = users.find((storedUser) => storedUser.email === email && storedUser.password === password);
-    if (existingUser) {
-      const { password: _password, ...safeUser } = existingUser;
-      setUser(safeUser);
+  const login = async (email, password) => {
+    try {
+      const { user: userData, token: userToken } = await signIn(email, password);
+      setUser(userData);
+      setToken(userToken);
       return { success: true };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Invalid credentials. Please try again.' 
+      };
     }
-    return { success: false, message: 'Invalid credentials. Please try again.' };
   };
 
-  const signup = (payload) => {
-    const users = readJson(USERS_KEY, []);
-    const alreadyExists = users.some((storedUser) => storedUser.email === payload.email);
-    if (alreadyExists) {
-      return { success: false, message: 'Email already registered. Please login.' };
+  const signup = async (userData) => {
+    try {
+      const { user: newUser, token: userToken } = await signUp(userData);
+      setUser(newUser);
+      setToken(userToken);
+      return { success: true };
+    } catch (error) {
+      console.error('Signup error:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Registration failed. Please try again.' 
+      };
     }
-    const newUsers = [...users, payload];
-    writeJson(USERS_KEY, newUsers);
-    return { success: true };
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      if (token) {
+        await apiSignOut();
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setToken(null);
+    }
   };
 
   const value = useMemo(

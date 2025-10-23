@@ -25,13 +25,19 @@ export default function Login() {
     event.preventDefault();
     setLoading(true);
     setError('');
-    const result = await login(form.email, form.password);
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.message);
+    
+    try {
+      const result = await login(form.email, form.password);
+      if (result.success) {
+        navigate('/');
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

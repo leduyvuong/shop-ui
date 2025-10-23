@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fetchCart } from '../utils/api.js';
+import { fetchCart, addToCart as apiAddToCart, updateCartItem as apiUpdateCartItem, removeFromCart as apiRemoveFromCart } from '../utils/api.js';
 
 const STORAGE_KEY = 'shop-cart-items';
 const isBrowser = typeof window !== 'undefined';
@@ -51,34 +51,79 @@ export function CartProvider({ children }) {
     loadCartFromApi();
   }, [loadCartFromApi]);
 
-  const addToCart = (product, quantity = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: Math.min(item.quantity + quantity, 10) }
-            : item,
-        );
+  const addToCart = async (product, quantity = 1) => {
+    try {
+      const cartItem = await apiAddToCart(product.id, quantity);
+      if (cartItem) {
+        setItems((prev) => {
+          const existing = prev.find((item) => item.id === product.id);
+          if (existing) {
+            return prev.map((item) =>
+              item.id === product.id
+                ? { ...item, quantity: Math.min(item.quantity + quantity, 10) }
+                : item,
+            );
+          }
+          return [...prev, { ...product, quantity, cartItemId: cartItem.cartItemId }];
+        });
       }
-      return [...prev, { ...product, quantity }];
-    });
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      // Fallback to localStorage if API fails
+      setItems((prev) => {
+        const existing = prev.find((item) => item.id === product.id);
+        if (existing) {
+          return prev.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: Math.min(item.quantity + quantity, 10) }
+              : item,
+          );
+        }
+        return [...prev, { ...product, quantity }];
+      });
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setItems((prev) => prev.filter((item) => item.id !== productId));
+  const removeFromCart = async (productId) => {
+    try {
+      const item = items.find((item) => item.id === productId);
+      if (item?.cartItemId) {
+        await apiRemoveFromCart(item.cartItemId);
+      }
+      setItems((prev) => prev.filter((item) => item.id !== productId));
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      // Fallback to localStorage if API fails
+      setItems((prev) => prev.filter((item) => item.id !== productId));
+    }
   };
 
-  const updateQuantity = (productId, quantity) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== productId) return item;
-        const numericValue = Number(quantity);
-        const safeValue = Number.isFinite(numericValue) ? numericValue : 1;
-        const boundedValue = Math.min(10, Math.max(1, Math.round(safeValue)));
-        return { ...item, quantity: boundedValue };
-      }),
-    );
+  const updateQuantity = async (productId, quantity) => {
+    const numericValue = Number(quantity);
+    const safeValue = Number.isFinite(numericValue) ? numericValue : 1;
+    const boundedValue = Math.min(10, Math.max(1, Math.round(safeValue)));
+    
+    try {
+      const item = items.find((item) => item.id === productId);
+      if (item?.cartItemId) {
+        await apiUpdateCartItem(item.cartItemId, boundedValue);
+      }
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== productId) return item;
+          return { ...item, quantity: boundedValue };
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
+      // Fallback to localStorage if API fails
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== productId) return item;
+          return { ...item, quantity: boundedValue };
+        }),
+      );
+    }
   };
 
   const clearCart = () => setItems([]);
