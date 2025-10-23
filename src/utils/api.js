@@ -155,6 +155,27 @@ export const mapUsers = (users) => {
   return users.map(mapUser).filter(Boolean);
 };
 
+export const mapAddress = (address) => {
+  if (!address) return null;
+
+  return {
+    id: address.id,
+    name: address.name ?? '',
+    phone: address.phone ?? '',
+    province: address.province ?? '',
+    district: address.district ?? '',
+    ward: address.ward ?? '',
+    street: address.street ?? '',
+    isDefault: Boolean(address.default ?? address.is_default ?? false),
+    raw: address,
+  };
+};
+
+export const mapAddresses = (addresses) => {
+  if (!Array.isArray(addresses)) return [];
+  return addresses.map(mapAddress).filter(Boolean);
+};
+
 export const mapOrderItem = (item) => {
   if (!item) return null;
 
@@ -267,6 +288,12 @@ export async function fetchUsers(params = {}) {
   };
 }
 
+export async function fetchUser(userId) {
+  if (!userId) throw new Error('User id is required');
+  const payload = await request(`/users/${userId}`);
+  return mapUser(payload?.data);
+}
+
 export async function fetchOrders(params = {}) {
   const searchParams = new URLSearchParams();
   if (params.page) searchParams.set('page', params.page);
@@ -278,4 +305,9 @@ export async function fetchOrders(params = {}) {
     orders: mapOrders(payload?.data ?? []),
     meta: payload?.meta ?? null,
   };
+}
+
+export async function fetchAddresses() {
+  const payload = await request('/addresses');
+  return mapAddresses(payload?.data ?? []);
 }

@@ -9,6 +9,7 @@ import Favorites from './pages/Favorites.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import Search from './pages/Search.jsx';
+import Account from './pages/Account.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import { AdminProvider } from './admin/context/AdminContext.jsx';
 import AdminLayout from './admin/components/AdminLayout.jsx';
@@ -17,6 +18,7 @@ import Products from './admin/pages/Products.jsx';
 import Reviews from './admin/pages/Reviews.jsx';
 import AdminSearch from './admin/pages/Search.jsx';
 import Orders from './admin/pages/Orders.jsx';
+import Users from './admin/pages/Users.jsx';
 import AdminLogin from './admin/pages/Login.jsx';
 
 const pageVariants = {
@@ -131,6 +133,23 @@ function StorefrontLayout() {
               }
             />
             <Route
+              path="/account"
+              element={
+                <StorefrontProtectedRoute>
+                  <motion.div
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ duration: 0.3 }}
+                    className="px-4 pb-16 pt-24 sm:px-6 lg:px-12"
+                  >
+                    <Account />
+                  </motion.div>
+                </StorefrontProtectedRoute>
+              }
+            />
+            <Route
               path="/login"
               element={
                 <motion.div
@@ -184,6 +203,7 @@ export default function App() {
       >
         <Route index element={<Dashboard />} />
         <Route path="products" element={<Products />} />
+        <Route path="users" element={<Users />} />
         <Route path="orders" element={<Orders />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="search" element={<AdminSearch />} />
