@@ -9,6 +9,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 import ReviewList from '../components/ReviewList.jsx';
 import ReviewForm from '../components/ReviewForm.jsx';
 import { readJson, writeJson } from '../utils/storage.js';
+import { fetchCategoryProducts, fetchProduct, fetchProducts } from '../utils/api.js';
+import { formatCurrency } from '../utils/format.js';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -28,24 +30,24 @@ export default function ProductDetails() {
 
   useEffect(() => {
     let ignore = false;
-    async function fetchProduct() {
+    async function loadProduct() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch(`https://fakestoreapi.com/products/${id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch product');
-        }
-        const data = await response.json();
+        const data = await fetchProduct(id);
         if (!ignore) {
           setProduct(data);
           setQuantity(1);
-          fetchRelated(data.category, data.id);
+          if (data?.categoryId) {
+            fetchRelated(data.categoryId, data.id);
+          } else if (data?.categorySlug) {
+            fetchRelated(data.categorySlug, data.id, true);
+          }
         }
       } catch (err) {
         console.error(err);
         if (!ignore) {
-          setError('Product not found. Please try again later.');
+          setError(err.message ?? 'Product not found. Please try again later.');
         }
       } finally {
         if (!ignore) {
@@ -54,15 +56,20 @@ export default function ProductDetails() {
       }
     }
 
-    async function fetchRelated(category, currentId) {
+    async function fetchRelated(categoryValue, currentId, useSlug = false) {
       try {
-        const response = await fetch('https://fakestoreapi.com/products');
-        if (!response.ok) {
-          throw new Error('Failed to load related products');
+        let relatedProducts = [];
+        if (useSlug) {
+          const { products: items } = await fetchProducts({ perPage: 100 });
+          relatedProducts = items.filter(
+            (entry) => entry.categorySlug === categoryValue || String(entry.categoryId ?? '') === String(categoryValue),
+          );
+        } else {
+          const { products: items } = await fetchCategoryProducts(categoryValue, { perPage: 12 });
+          relatedProducts = items;
         }
-        const data = await response.json();
         if (!ignore) {
-          const filtered = data.filter((item) => item.category === category && item.id !== currentId);
+          const filtered = relatedProducts.filter((item) => item.id !== currentId);
           const random = filtered.sort(() => 0.5 - Math.random()).slice(0, 4);
           setRelated(random);
         }
@@ -71,7 +78,7 @@ export default function ProductDetails() {
       }
     }
 
-    fetchProduct();
+    loadProduct();
     setReviews(() => {
       const stored = readJson('reviews', []);
       return stored.filter((review) => review.productId === productId);
@@ -83,7 +90,7 @@ export default function ProductDetails() {
 
   const ratingStars = useMemo(() => {
     if (!product) return null;
-    const rounded = Math.round(product.rating.rate);
+    const rounded = Math.round(product.rating?.rate ?? 0);
     return '★'.repeat(rounded).padEnd(5, '☆');
   }, [product]);
 
@@ -174,9 +181,16 @@ export default function ProductDetails() {
           </div>
           <div className="flex items-center gap-4 text-sm font-semibold text-amber-500">
             <span>{ratingStars}</span>
-            <span className="text-slate-400">{product.rating.count} reviews</span>
+            <span className="text-slate-400">{product.rating?.count ?? 0} reviews</span>
           </div>
-          <p className="text-3xl font-bold text-slate-900">${product.price.toFixed(2)}</p>
+          <div className="flex items-baseline gap-3">
+            <p className="text-3xl font-bold text-slate-900">{formatCurrency(product.price)}</p>
+            {Number(product.originalPrice ?? 0) > Number(product.price ?? 0) && (
+              <span className="text-sm font-semibold text-slate-400 line-through">
+                {formatCurrency(product.originalPrice)}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2">
               <button type="button" onClick={decrease} className="text-lg font-semibold text-slate-600">

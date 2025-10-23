@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
+import { fetchProducts } from '../../utils/api.js';
+import { formatCurrency } from '../../utils/format.js';
 
 export default function Search() {
   const [query, setQuery] = useState('');
@@ -17,9 +18,9 @@ export default function Search() {
       setLoading(true);
       setError(null);
       try {
-        const { data } = await axios.get('https://fakestoreapi.com/products');
+        const { products: loaded } = await fetchProducts({ perPage: 100 });
         if (!ignore) {
-          setProducts(data);
+          setProducts(loaded);
         }
       } catch (err) {
         if (!ignore) {
@@ -40,17 +41,22 @@ export default function Search() {
   }, []);
 
   const categories = useMemo(() => {
-    const list = Array.from(new Set(products.map((product) => product.category)));
+    const categories = products
+      .map((product) => product.category?.toString().trim())
+      .filter((value) => value && value.length > 0);
+    const list = Array.from(new Set(categories));
     return ['all', ...list];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     const search = query.toLowerCase();
     let result = products.filter((product) => {
-      const matchesQuery = !search ||
+      const matchesQuery =
+        !search ||
         product.title.toLowerCase().includes(search) ||
-        product.category.toLowerCase().includes(search);
-      const matchesCategory = category === 'all' || product.category === category;
+        (product.category ?? '').toLowerCase().includes(search);
+      const matchesCategory =
+        category === 'all' || product.category === category || product.categorySlug === category;
       return matchesQuery && matchesCategory;
     });
 
@@ -149,7 +155,9 @@ export default function Search() {
                     {product.description}
                   </p>
                   <div className="mt-auto flex items-center justify-between pt-4">
-                    <span className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">${Number(product.price).toFixed(2)}</span>
+                    <span className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
+                      {formatCurrency(product.price)}
+                    </span>
                     <span className="text-sm font-medium text-amber-500">{product.rating?.rate ?? 0}★</span>
                   </div>
                 </div>

@@ -3,39 +3,45 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Loader from '../components/Loader.jsx';
 import ProductCard from '../components/ProductCard.jsx';
-
-const categories = [
-  { label: 'All', value: 'all' },
-  { label: "Men's Fashion", value: "men's clothing" },
-  { label: "Women's Fashion", value: "women's clothing" },
-  { label: 'Electronics', value: 'electronics' },
-  { label: 'Jewelry', value: 'jewelery' },
-];
+import { fetchCategories, fetchProducts } from '../utils/api.js';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([{ label: 'All', value: 'all' }]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     let ignore = false;
-    async function fetchProducts() {
+    async function loadProducts() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('https://fakestoreapi.com/products');
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        const data = await response.json();
+        const [{ products: loadedProducts }, fetchedCategories] = await Promise.all([
+          fetchProducts({ perPage: 24 }),
+          fetchCategories({ perPage: 20 }),
+        ]);
         if (!ignore) {
-          setProducts(data);
+          setProducts(loadedProducts);
+          const uniqueCategories = new Map();
+          fetchedCategories.forEach((category) => {
+            const value = category.slug ?? String(category.id);
+            if (!value) return;
+            if (!uniqueCategories.has(value)) {
+              uniqueCategories.set(value, {
+                label: category.name,
+                value,
+                id: category.id,
+              });
+            }
+          });
+          setCategories([{ label: 'All', value: 'all' }, ...uniqueCategories.values()]);
         }
       } catch (err) {
         console.error(err);
         if (!ignore) {
-          setError('Unable to load products. Please refresh to try again.');
+          setError(err.message ?? 'Unable to load products. Please refresh to try again.');
         }
       } finally {
         if (!ignore) {
@@ -44,7 +50,7 @@ export default function Home() {
       }
     }
 
-    fetchProducts();
+    loadProducts();
     return () => {
       ignore = true;
     };
@@ -52,7 +58,10 @@ export default function Home() {
 
   const filteredProducts = useMemo(() => {
     if (selectedCategory === 'all') return products;
-    return products.filter((product) => product.category === selectedCategory);
+    return products.filter(
+      (product) =>
+        product.categorySlug === selectedCategory || String(product.categoryId ?? '') === String(selectedCategory),
+    );
   }, [products, selectedCategory]);
 
   return (

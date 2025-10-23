@@ -4,16 +4,10 @@ import { motion } from 'framer-motion';
 import SearchBar from '../components/SearchBar.jsx';
 import SearchResults from '../components/SearchResults.jsx';
 import { readJson, upsertUniqueValue, writeJson } from '../utils/storage.js';
+import { fetchCategories, fetchProducts } from '../utils/api.js';
 
 const SEARCH_HISTORY_KEY = 'searchHistory';
 const HISTORY_EVENT = 'shop-search-history-updated';
-const CATEGORY_OPTIONS = [
-  { label: 'All Categories', value: 'all' },
-  { label: "Men's Fashion", value: "men's clothing" },
-  { label: "Women's Fashion", value: "women's clothing" },
-  { label: 'Electronics', value: 'electronics' },
-  { label: 'Jewelry', value: 'jewelery' },
-];
 
 const SORT_OPTIONS = [
   { label: 'Relevance', value: 'relevance' },
@@ -35,6 +29,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [history, setHistory] = useState(() => readJson(SEARCH_HISTORY_KEY, []));
+  const [categoryOptions, setCategoryOptions] = useState([{ label: 'All Categories', value: 'all' }]);
 
   const broadcastHistoryUpdate = (entries) => {
     setHistory(entries);
@@ -45,22 +40,34 @@ export default function Search() {
 
   useEffect(() => {
     let ignore = false;
-    async function fetchProducts() {
+    async function loadProducts() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('https://fakestoreapi.com/products');
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        const data = await response.json();
+        const [{ products: loadedProducts }, fetchedCategories] = await Promise.all([
+          fetchProducts({ perPage: 100 }),
+          fetchCategories({ perPage: 50 }),
+        ]);
         if (!ignore) {
-          setProducts(data);
+          setProducts(loadedProducts);
+          const uniqueCategories = new Map();
+          fetchedCategories.forEach((item) => {
+            const value = item.slug ?? String(item.id);
+            if (!value) return;
+            if (!uniqueCategories.has(value)) {
+              uniqueCategories.set(value, {
+                label: item.name,
+                value,
+                id: item.id,
+              });
+            }
+          });
+          setCategoryOptions([{ label: 'All Categories', value: 'all' }, ...uniqueCategories.values()]);
         }
       } catch (err) {
         console.error(err);
         if (!ignore) {
-          setError('Unable to search products right now. Please try again later.');
+          setError(err.message ?? 'Unable to search products right now. Please try again later.');
         }
       } finally {
         if (!ignore) {
@@ -69,7 +76,7 @@ export default function Search() {
       }
     }
 
-    fetchProducts();
+    loadProducts();
     return () => {
       ignore = true;
     };
@@ -100,12 +107,16 @@ export default function Search() {
     let entries = [...products];
     if (debouncedQuery) {
       const normalized = debouncedQuery.toLowerCase();
-      entries = entries.filter((product) =>
-        product.title.toLowerCase().includes(normalized) || product.category.toLowerCase().includes(normalized),
-      );
+      entries = entries.filter((product) => {
+        const title = product.title?.toLowerCase() ?? '';
+        const categoryName = product.category?.toLowerCase() ?? '';
+        return title.includes(normalized) || categoryName.includes(normalized);
+      });
     }
     if (category !== 'all') {
-      entries = entries.filter((product) => product.category === category);
+      entries = entries.filter(
+        (product) => product.categorySlug === category || String(product.categoryId ?? '') === String(category),
+      );
     }
     switch (sort) {
       case 'price-asc':
@@ -191,7 +202,7 @@ export default function Search() {
               onChange={(event) => setCategory(event.target.value)}
               className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700 focus:border-primary focus:bg-white focus:outline-none"
             >
-              {CATEGORY_OPTIONS.map((option) => (
+              {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

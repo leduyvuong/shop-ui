@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 
 const navItems = [
   { label: 'Dashboard', to: '/admin', icon: '📊' },
+  { label: 'Orders Management', to: '/admin/orders', icon: '🧾' },
+  { label: 'Users Management', to: '/admin/users', icon: '👥' },
   { label: 'Products Management', to: '/admin/products', icon: '🛍️' },
   { label: 'User Reviews', to: '/admin/reviews', icon: '💬' },
   { label: 'Search Products', to: '/admin/search', icon: '🔍' },

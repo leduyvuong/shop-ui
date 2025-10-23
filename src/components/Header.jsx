@@ -11,6 +11,7 @@ const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/favorites', label: 'Favorites', protected: true },
   { to: '/cart', label: 'Cart', protected: true },
+  { to: '/account', label: 'Account', protected: true },
 ];
 
 const linkBaseClasses = 'rounded-full px-4 py-2 text-sm font-medium transition hover:bg-primary hover:text-white';

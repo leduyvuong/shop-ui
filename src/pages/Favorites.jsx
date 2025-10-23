@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
+import { formatCurrency } from '../utils/format.js';
 
 export default function Favorites() {
   const { items, removeFromWishlist } = useWishlist();
@@ -32,7 +33,7 @@ export default function Favorites() {
             <div className="mt-4 flex flex-1 flex-col">
               <h3 className="line-clamp-2 text-sm font-semibold text-slate-900">{product.title}</h3>
               <p className="mt-2 text-xs uppercase tracking-wide text-primary">{product.category}</p>
-              <p className="mt-3 text-lg font-bold text-slate-900">${product.price.toFixed(2)}</p>
+              <p className="mt-3 text-lg font-bold text-slate-900">{formatCurrency(product.price)}</p>
               <div className="mt-4 grid grid-cols-1 gap-3">
                 <button
                   type="button"
