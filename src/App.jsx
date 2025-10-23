@@ -8,6 +8,7 @@ import Cart from './pages/Cart.jsx';
 import Favorites from './pages/Favorites.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
+import Search from './pages/Search.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 
 const pageVariants = {
@@ -60,6 +61,21 @@ export default function App() {
                   className="px-4 pb-16 pt-24 sm:px-6 lg:px-12"
                 >
                   <ProductDetails />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="px-4 pb-16 pt-24 sm:px-6 lg:px-12"
+                >
+                  <Search />
                 </motion.div>
               }
             />
