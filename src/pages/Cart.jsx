@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
+import { formatCurrency } from '../utils/format.js';
 
 export default function Cart() {
   const { items, removeFromCart, updateQuantity, totals, clearCart } = useCart();
@@ -56,7 +57,7 @@ export default function Cart() {
                     +
                   </button>
                 </div>
-                <p className="text-lg font-bold text-slate-900">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="text-lg font-bold text-slate-900">{formatCurrency(item.price * item.quantity)}</p>
                 <button
                   type="button"
                   onClick={() => removeFromCart(item.id)}
@@ -74,15 +75,15 @@ export default function Cart() {
         <div className="mt-6 space-y-3 text-sm text-slate-600">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>${totals.subtotal.toFixed(2)}</span>
+            <span>{formatCurrency(totals.subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span>Tax (7%)</span>
-            <span>${totals.tax.toFixed(2)}</span>
+            <span>{formatCurrency(totals.tax)}</span>
           </div>
           <div className="flex justify-between text-base font-semibold text-slate-900">
             <span>Total</span>
-            <span>${totals.total.toFixed(2)}</span>
+            <span>{formatCurrency(totals.total)}</span>
           </div>
         </div>
         <button

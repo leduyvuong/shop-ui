@@ -62,8 +62,8 @@ export function CartProvider({ children }) {
   const clearCart = () => setItems([]);
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = subtotal * 0.07;
+    const subtotal = items.reduce((sum, item) => sum + Number(item.price ?? 0) * item.quantity, 0);
+    const tax = Math.round(subtotal * 0.07);
     const total = subtotal + tax;
     return {
       subtotal,

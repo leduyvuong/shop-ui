@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
+import { formatCurrency } from '../utils/format.js';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -9,6 +10,8 @@ export default function ProductCard({ product }) {
   const isInWishlist = items.some((item) => item.id === product.id);
   const ratingValue = Math.round(product.rating?.rate ?? 0);
   const ratingStars = '★'.repeat(ratingValue).padEnd(5, '☆');
+
+  const hasDiscount = Number(product.originalPrice ?? 0) > Number(product.price ?? 0);
 
   return (
     <motion.div
@@ -30,7 +33,14 @@ export default function ProductCard({ product }) {
         </Link>
         <p className="mt-2 text-xs uppercase tracking-wide text-primary">{product.category}</p>
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-lg font-bold text-slate-900">${product.price.toFixed(2)}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold text-slate-900">{formatCurrency(product.price)}</span>
+            {hasDiscount && (
+              <span className="text-xs font-semibold text-slate-400 line-through">
+                {formatCurrency(product.originalPrice)}
+              </span>
+            )}
+          </div>
           <span className="flex items-center gap-1 text-xs text-amber-500">
             <span>{ratingStars}</span>
             <span className="text-slate-400">({product.rating?.count ?? 0})</span>

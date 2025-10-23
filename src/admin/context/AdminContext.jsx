@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import { fetchProducts as fetchProductsFromApi, mapProduct } from '../../utils/api.js';
 
 const AdminContext = createContext(null);
 
@@ -22,16 +22,31 @@ export function AdminProvider({ children }) {
     return localStorage.getItem(DARK_MODE_STORAGE_KEY) === 'true';
   });
 
+  const normalizeProducts = useCallback((items) => {
+    if (!Array.isArray(items)) return [];
+    return items
+      .map((item) => {
+        try {
+          return mapProduct(item?.raw ?? item);
+        } catch (error) {
+          console.error('Failed to normalize product', error);
+          return null;
+        }
+      })
+      .filter(Boolean);
+  }, []);
+
   const persistProducts = useCallback((items) => {
-    setProducts(items);
+    const normalized = normalizeProducts(items);
+    setProducts(normalized);
     try {
-      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(normalized));
     } catch (error) {
       console.error('Failed to persist products', error);
     }
-  }, []);
+  }, [normalizeProducts]);
 
-  const fetchProducts = useCallback(async () => {
+  const loadProducts = useCallback(async () => {
     setLoadingProducts(true);
     try {
       const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
@@ -42,8 +57,8 @@ export function AdminProvider({ children }) {
         return;
       }
 
-      const { data } = await axios.get('https://fakestoreapi.com/products');
-      persistProducts(data);
+      const { products: fetchedProducts } = await fetchProductsFromApi({ perPage: 100 });
+      persistProducts(fetchedProducts);
     } catch (error) {
       console.error('Failed to load products', error);
     } finally {
@@ -52,8 +67,8 @@ export function AdminProvider({ children }) {
   }, [persistProducts]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    loadProducts();
+  }, [loadProducts]);
 
   useEffect(() => {
     try {
@@ -146,7 +161,7 @@ export function AdminProvider({ children }) {
       showToast,
       darkMode,
       toggleDarkMode,
-      refreshProducts: fetchProducts,
+      refreshProducts: loadProducts,
     }),
     [
       products,
@@ -161,7 +176,7 @@ export function AdminProvider({ children }) {
       showToast,
       darkMode,
       toggleDarkMode,
-      fetchProducts,
+      loadProducts,
     ],
   );
 
