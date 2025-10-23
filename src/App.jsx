@@ -16,6 +16,7 @@ import Dashboard from './admin/pages/Dashboard.jsx';
 import Products from './admin/pages/Products.jsx';
 import Reviews from './admin/pages/Reviews.jsx';
 import AdminSearch from './admin/pages/Search.jsx';
+import Orders from './admin/pages/Orders.jsx';
 import AdminLogin from './admin/pages/Login.jsx';
 
 const pageVariants = {
@@ -183,6 +184,7 @@ export default function App() {
       >
         <Route index element={<Dashboard />} />
         <Route path="products" element={<Products />} />
+        <Route path="orders" element={<Orders />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="search" element={<AdminSearch />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />

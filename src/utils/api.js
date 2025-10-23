@@ -115,6 +115,96 @@ export const mapProducts = (products) => {
   return products.map(mapProduct).filter(Boolean);
 };
 
+export const mapCartItem = (item) => {
+  if (!item) return null;
+
+  const product = mapProduct(item.product ?? item);
+  if (!product) return null;
+
+  const quantity = toNumber(item.quantity ?? item.qty ?? 1, 1);
+
+  return {
+    ...product,
+    id: product.id,
+    quantity,
+    cartItemId: item.id ?? null,
+  };
+};
+
+export const mapCartItems = (items) => {
+  if (!Array.isArray(items)) return [];
+  return items.map(mapCartItem).filter(Boolean);
+};
+
+export const mapUser = (user) => {
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    name: user.name ?? 'Unknown user',
+    email: user.email ?? '',
+    role: user.role ?? 'customer',
+    phone: user.phone ?? '',
+    createdAt: user.created_at ?? user.createdAt ?? null,
+    raw: user,
+  };
+};
+
+export const mapUsers = (users) => {
+  if (!Array.isArray(users)) return [];
+  return users.map(mapUser).filter(Boolean);
+};
+
+export const mapOrderItem = (item) => {
+  if (!item) return null;
+
+  const product = mapProduct(item.product ?? item.product_details ?? item.product_detail ?? {});
+  const quantity = toNumber(item.quantity ?? item.qty ?? 1, 1);
+  const price = toNumber(item.price ?? product?.price ?? 0);
+  const total = toNumber(item.total_price ?? item.total ?? price * quantity, price * quantity);
+
+  return {
+    id: item.id ?? product?.id ?? null,
+    quantity,
+    price,
+    total,
+    product,
+    raw: item,
+  };
+};
+
+export const mapOrderItems = (items) => {
+  if (!Array.isArray(items)) return [];
+  return items.map(mapOrderItem).filter(Boolean);
+};
+
+export const mapOrder = (order) => {
+  if (!order) return null;
+
+  const items = mapOrderItems(order.order_items ?? order.items ?? []);
+  const total = toNumber(order.total_price ?? order.total ?? 0);
+  const shippingFee = toNumber(order.shipping_fee ?? order.shippingFee ?? 0);
+
+  return {
+    id: order.id,
+    status: order.status ?? 'pending',
+    userId: order.user_id ?? order.user?.id ?? null,
+    total,
+    shippingFee,
+    paymentMethod: order.payment_method ?? order.payment?.method ?? 'cod',
+    createdAt: order.created_at ?? order.createdAt ?? null,
+    address: order.address ?? null,
+    payment: order.payment ?? null,
+    items,
+    raw: order,
+  };
+};
+
+export const mapOrders = (orders) => {
+  if (!Array.isArray(orders)) return [];
+  return orders.map(mapOrder).filter(Boolean);
+};
+
 export async function fetchProducts(params = {}) {
   const searchParams = new URLSearchParams();
   if (params.page) searchParams.set('page', params.page);
@@ -156,6 +246,36 @@ export async function fetchCategoryProducts(categoryId, params = {}) {
   const payload = await request(`/categories/${categoryId}/products`, { searchParams });
   return {
     products: mapProducts(payload?.data ?? []),
+    meta: payload?.meta ?? null,
+  };
+}
+
+export async function fetchCart() {
+  const payload = await request('/cart');
+  return mapCartItems(payload?.data ?? []);
+}
+
+export async function fetchUsers(params = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.page) searchParams.set('page', params.page);
+  if (params.perPage) searchParams.set('per_page', params.perPage);
+
+  const payload = await request('/users', { searchParams });
+  return {
+    users: mapUsers(payload?.data ?? []),
+    meta: payload?.meta ?? null,
+  };
+}
+
+export async function fetchOrders(params = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.page) searchParams.set('page', params.page);
+  if (params.perPage) searchParams.set('per_page', params.perPage);
+  if (params.status) searchParams.set('status', params.status);
+
+  const payload = await request('/orders', { searchParams });
+  return {
+    orders: mapOrders(payload?.data ?? []),
     meta: payload?.meta ?? null,
   };
 }

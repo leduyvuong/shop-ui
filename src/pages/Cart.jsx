@@ -3,12 +3,21 @@ import { useCart } from '../context/CartContext.jsx';
 import { formatCurrency } from '../utils/format.js';
 
 export default function Cart() {
-  const { items, removeFromCart, updateQuantity, totals, clearCart } = useCart();
+  const { items, loading, removeFromCart, updateQuantity, totals, clearCart } = useCart();
 
   const handleCheckout = () => {
     window.alert('Order placed successfully!');
     clearCart();
   };
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl rounded-3xl border border-slate-100 bg-white p-10 text-center shadow-sm">
+        <h2 className="text-2xl font-semibold text-slate-900">Loading your cart</h2>
+        <p className="mt-3 text-sm text-slate-500">Please wait while we fetch your items.</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

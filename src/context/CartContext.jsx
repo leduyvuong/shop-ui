@@ -1,11 +1,14 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { fetchCart } from '../utils/api.js';
 
 const STORAGE_KEY = 'shop-cart-items';
+const isBrowser = typeof window !== 'undefined';
 
 const CartContext = createContext();
 
 const readCart = () => {
   try {
+    if (!isBrowser) return [];
     const raw = window.localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (error) {
@@ -16,6 +19,7 @@ const readCart = () => {
 
 const writeCart = (items) => {
   try {
+    if (!isBrowser) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   } catch (error) {
     console.error('Failed to persist cart', error);
@@ -24,10 +28,28 @@ const writeCart = (items) => {
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => readCart());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     writeCart(items);
   }, [items]);
+
+  const loadCartFromApi = useCallback(async () => {
+    if (!isBrowser) return;
+    setLoading(true);
+    try {
+      const remoteItems = await fetchCart();
+      setItems(remoteItems);
+    } catch (error) {
+      console.error('Failed to load cart from API', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCartFromApi();
+  }, [loadCartFromApi]);
 
   const addToCart = (product, quantity = 1) => {
     setItems((prev) => {
@@ -74,8 +96,17 @@ export function CartProvider({ children }) {
   }, [items]);
 
   const value = useMemo(
-    () => ({ items, addToCart, removeFromCart, updateQuantity, clearCart, totals }),
-    [items, totals],
+    () => ({
+      items,
+      loading,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      refreshCart: loadCartFromApi,
+      totals,
+    }),
+    [items, loading, loadCartFromApi, totals],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
