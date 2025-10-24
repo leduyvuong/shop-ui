@@ -19,6 +19,7 @@ import Reviews from './admin/pages/Reviews.jsx';
 import AdminSearch from './admin/pages/Search.jsx';
 import Orders from './admin/pages/Orders.jsx';
 import Users from './admin/pages/Users.jsx';
+import SendMail from './admin/pages/SendMail.jsx';
 import AdminLogin from './admin/pages/Login.jsx';
 
 const pageVariants = {
@@ -207,6 +208,7 @@ export default function App() {
         <Route path="orders" element={<Orders />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="search" element={<AdminSearch />} />
+        <Route path="send-mail" element={<SendMail />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
       <Route path="/*" element={<StorefrontLayout />} />
