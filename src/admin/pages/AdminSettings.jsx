@@ -12,12 +12,6 @@ const cardVariants = {
 const selectorBaseClasses =
   'flex-1 rounded-2xl border px-4 py-4 text-left transition focus:outline-none focus-visible:ring-2';
 
-const summaryItems = [
-  { label: 'Total themes available', value: 2 },
-  { label: 'Home layouts', value: 2 },
-  { label: 'Preview URL', value: '/preview/home-v2' },
-];
-
 export default function AdminSettings() {
   const { theme, homeVersion, updateSettings } = useTheme();
   const { showToast } = useAdminContext();
@@ -47,6 +41,12 @@ export default function AdminSettings() {
     }
   };
 
+  const summaryItems = [
+    { label: 'Total themes available', value: 2 },
+    { label: 'Home layouts', value: 3 },
+    { label: 'Preview URL', value: `/preview/home-${form.homeVersion}` },
+  ];
+
   return (
     <motion.form
       onSubmit={handleSubmit}
@@ -63,13 +63,22 @@ export default function AdminSettings() {
               Choose how the storefront appears to customers. These preferences are stored for the next visit.
             </p>
           </div>
-          <Link
-            to="/preview/home-v2"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-primary-light dark:hover:text-primary-light"
-          >
-            Preview Home v2
-            <span aria-hidden>↗</span>
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/preview/home-v2"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-primary-light dark:hover:text-primary-light"
+            >
+              Preview Home v2
+              <span aria-hidden>↗</span>
+            </Link>
+            <Link
+              to="/preview/home-v3"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-primary-light dark:hover:text-primary-light"
+            >
+              Preview Home v3
+              <span aria-hidden>↗</span>
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -115,7 +124,7 @@ export default function AdminSettings() {
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Decide which experience customers see when they land on the storefront.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <label
                 className={`${selectorBaseClasses} cursor-pointer ${
                   form.homeVersion === 'v1'
@@ -154,6 +163,26 @@ export default function AdminSettings() {
                 <span className="block text-sm font-semibold">Home Version 2</span>
                 <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
                   Immersive hero, motion design, and testimonials.
+                </span>
+              </label>
+              <label
+                className={`${selectorBaseClasses} cursor-pointer ${
+                  form.homeVersion === 'v3'
+                    ? 'border-primary bg-primary/10 text-primary shadow-sm dark:border-primary-light dark:bg-primary/10'
+                    : 'border-slate-200 text-slate-600 hover:border-primary/60 dark:border-slate-700 dark:text-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="home-version"
+                  value="v3"
+                  checked={form.homeVersion === 'v3'}
+                  onChange={() => handleHomeVersionSelect('v3')}
+                  className="sr-only"
+                />
+                <span className="block text-sm font-semibold">Home Version 3</span>
+                <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                  Editorial luxury with immersive lifestyle storytelling.
                 </span>
               </label>
             </div>
