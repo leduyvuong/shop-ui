@@ -14,7 +14,8 @@ const navLinks = [
   { to: '/account', label: 'Account', protected: true },
 ];
 
-const linkBaseClasses = 'rounded-full px-4 py-2 text-sm font-medium transition hover:bg-primary hover:text-white';
+const linkBaseClasses =
+  'rounded-full px-4 py-2 text-sm font-medium transition hover:bg-primary hover:text-white dark:hover:bg-primary-light';
 const HISTORY_EVENT = 'shop-search-history-updated';
 
 export default function Header() {
@@ -78,12 +79,12 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-white/90 shadow backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 bg-white/90 shadow backdrop-blur transition-colors dark:bg-slate-900/80 dark:text-slate-100 dark:shadow-slate-900/50">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2 text-xl font-semibold text-primary">
+          <Link to="/" className="flex items-center gap-2 text-xl font-semibold text-primary dark:text-primary-light">
             <span className="rounded-full bg-primary px-3 py-1 font-bold text-white">Shop</span>
-            <span className="hidden sm:block">Modern Store</span>
+            <span className="hidden sm:block text-slate-800 dark:text-slate-100">Modern Store</span>
           </Link>
           <div className="hidden flex-1 md:flex md:max-w-md">
             <SearchBar
@@ -103,7 +104,11 @@ export default function Header() {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `${linkBaseClasses} ${isActive ? 'bg-primary text-white shadow-md' : 'text-slate-700'}`
+                    `${linkBaseClasses} ${
+                      isActive
+                        ? 'bg-primary text-white shadow-md'
+                        : 'text-slate-700 dark:text-slate-200'
+                    }`
                   }
                 >
                   {link.label}
@@ -112,7 +117,7 @@ export default function Header() {
             {user ? (
               <button
                 type="button"
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-slate-700"
+                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600"
                 onClick={handleLogout}
               >
                 Logout
@@ -121,20 +126,24 @@ export default function Header() {
               <NavLink
                 to="/login"
                 className={({ isActive }) =>
-                  `${linkBaseClasses} ${isActive ? 'bg-primary text-white shadow-md' : 'border border-primary text-primary'}`
+                  `${linkBaseClasses} ${
+                    isActive
+                      ? 'bg-primary text-white shadow-md'
+                      : 'border border-primary text-primary dark:border-primary-light dark:text-primary-light'
+                  }`
                 }
               >
                 Login
               </NavLink>
             )}
             <div className="flex items-center gap-3">
-              <Link to="/favorites" className="flex items-center gap-1 text-sm text-slate-600">
+              <Link to="/favorites" className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-200">
                 <span role="img" aria-label="wishlist">
                   ❤️
                 </span>
                 <span className="font-semibold">{wishlistItems.length}</span>
               </Link>
-              <Link to="/cart" className="flex items-center gap-1 text-sm text-slate-600">
+              <Link to="/cart" className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-200">
                 <span role="img" aria-label="cart">
                   🛒
                 </span>
@@ -144,7 +153,7 @@ export default function Header() {
           </nav>
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600 md:hidden"
+            className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600 transition md:hidden dark:border-slate-700 dark:text-slate-200"
             onClick={toggleMenu}
             aria-label="Toggle navigation"
           >
@@ -171,11 +180,11 @@ export default function Header() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-slate-100 bg-white md:hidden"
+            className="border-t border-slate-100 bg-white transition-colors md:hidden dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="space-y-4 px-4 py-6">
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick Links</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Quick Links</p>
                 {navLinks
                   .filter((link) => !link.protected || user)
                   .map((link) => (
@@ -184,7 +193,9 @@ export default function Header() {
                       to={link.to}
                       onClick={closeMenu}
                       className={({ isActive }) =>
-                        `${linkBaseClasses} block ${isActive ? 'bg-primary text-white shadow-md' : 'text-slate-700'}`
+                        `${linkBaseClasses} block ${
+                          isActive ? 'bg-primary text-white shadow-md' : 'text-slate-700 dark:text-slate-200'
+                        }`
                       }
                     >
                       {link.label}
@@ -194,7 +205,7 @@ export default function Header() {
               {navLinks
                 .filter((link) => !link.protected || user)
                 .length === 0 && (
-                <p className="text-sm text-slate-500">Sign in to access more pages.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Sign in to access more pages.</p>
               )}
               {user ? (
                 <button
@@ -203,7 +214,7 @@ export default function Header() {
                     closeMenu();
                     handleLogout();
                   }}
-                  className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow"
+                  className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600"
                 >
                   Logout
                 </button>
@@ -212,20 +223,32 @@ export default function Header() {
                   to="/login"
                   onClick={closeMenu}
                   className={({ isActive }) =>
-                    `${linkBaseClasses} block text-center ${isActive ? 'bg-primary text-white shadow-md' : 'border border-primary text-primary'}`
+                    `${linkBaseClasses} block text-center ${
+                      isActive
+                        ? 'bg-primary text-white shadow-md'
+                        : 'border border-primary text-primary dark:border-primary-light dark:text-primary-light'
+                    }`
                   }
                 >
                   Login
                 </NavLink>
               )}
-              <div className="flex items-center justify-between rounded-2xl bg-slate-100 px-4 py-3">
-                <Link to="/favorites" onClick={closeMenu} className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <div className="flex items-center justify-between rounded-2xl bg-slate-100 px-4 py-3 dark:bg-slate-800">
+                <Link
+                  to="/favorites"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-100"
+                >
                   ❤️ Favorites
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs">{wishlistItems.length}</span>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs dark:bg-slate-700">{wishlistItems.length}</span>
                 </Link>
-                <Link to="/cart" onClick={closeMenu} className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <Link
+                  to="/cart"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-100"
+                >
                   🛒 Cart
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs">{totals.itemCount}</span>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs dark:bg-slate-700">{totals.itemCount}</span>
                 </Link>
               </div>
             </div>

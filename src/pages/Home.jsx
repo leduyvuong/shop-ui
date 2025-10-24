@@ -65,7 +65,7 @@ export default function Home() {
   }, [products, selectedCategory]);
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-7xl text-slate-900 dark:text-slate-100">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-accent text-white">
         <div className="relative z-10 grid gap-6 px-6 py-16 sm:grid-cols-2 sm:px-10 lg:px-16">
           <div className="space-y-5">
@@ -110,7 +110,7 @@ export default function Home() {
 
       <section id="products" className="mt-16 space-y-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-bold text-slate-900">Browse Categories</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Browse Categories</h2>
           <div className="flex flex-wrap gap-3">
             {categories.map((category) => (
               <button
@@ -120,7 +120,7 @@ export default function Home() {
                 className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
                   selectedCategory === category.value
                     ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                    : 'bg-white text-slate-600 shadow'
+                    : 'bg-white text-slate-600 shadow dark:bg-slate-800/80 dark:text-slate-200'
                 }`}
               >
                 {category.label}
@@ -130,7 +130,7 @@ export default function Home() {
         </div>
         {loading && <Loader label="Fetching products" />}
         {error && !loading && (
-          <div className="rounded-3xl border border-red-100 bg-red-50 p-6 text-red-600">
+          <div className="rounded-3xl border border-red-100 bg-red-50 p-6 text-red-600 dark:border-red-400/40 dark:bg-red-500/10 dark:text-red-200">
             <p className="font-semibold">{error}</p>
           </div>
         )}
