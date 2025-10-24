@@ -1,10 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'siteSettings';
+const HOME_VERSIONS = new Set(['v1', 'v2', 'v3']);
+
 const defaultSettings = {
   theme: 'light',
   homeVersion: 'v1',
 };
+
+const sanitizeHomeVersion = (value, fallback = defaultSettings.homeVersion) =>
+  HOME_VERSIONS.has(value) ? value : fallback;
 
 const ThemeContext = createContext({
   theme: defaultSettings.theme,
@@ -27,7 +32,7 @@ const readSettings = () => {
       ...defaultSettings,
       ...parsed,
       theme: parsed?.theme === 'dark' ? 'dark' : 'light',
-      homeVersion: parsed?.homeVersion === 'v2' ? 'v2' : 'v1',
+      homeVersion: sanitizeHomeVersion(parsed?.homeVersion),
     };
   } catch (error) {
     console.error('Failed to read theme settings', error);
@@ -81,7 +86,7 @@ export function ThemeProvider({ children }) {
   }, []);
 
   const setHomeVersion = useCallback((version) => {
-    setSettings((prev) => ({ ...prev, homeVersion: version === 'v2' ? 'v2' : 'v1' }));
+    setSettings((prev) => ({ ...prev, homeVersion: sanitizeHomeVersion(version, prev.homeVersion) }));
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -93,7 +98,7 @@ export function ThemeProvider({ children }) {
       ...prev,
       ...updates,
       theme: updates?.theme === 'dark' ? 'dark' : updates?.theme === 'light' ? 'light' : prev.theme,
-      homeVersion: updates?.homeVersion === 'v2' ? 'v2' : updates?.homeVersion === 'v1' ? 'v1' : prev.homeVersion,
+      homeVersion: sanitizeHomeVersion(updates?.homeVersion, prev.homeVersion),
     }));
   }, []);
 
