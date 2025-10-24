@@ -5,9 +5,12 @@ import { useAdminContext } from '../context/AdminContext.jsx';
 
 const titles = {
   '/admin': 'Dashboard Overview',
+  '/admin/orders': 'Orders Management',
+  '/admin/users': 'Users Management',
   '/admin/products': 'Products Management',
   '/admin/reviews': 'User Reviews',
   '/admin/search': 'Search Products',
+  '/admin/send-mail': 'Send Mail Campaign',
 };
 
 export default function Header({ onToggleSidebar }) {
