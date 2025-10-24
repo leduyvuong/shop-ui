@@ -4,13 +4,16 @@ import { useMemo } from 'react';
 
 const navItems = [
   { label: 'Dashboard', to: '/admin', icon: '📊' },
-  { label: 'Orders Management', to: '/admin/orders', icon: '🧾' },
-  { label: 'Users Management', to: '/admin/users', icon: '👥' },
   { label: 'Products Management', to: '/admin/products', icon: '🛍️' },
   { label: 'User Reviews', to: '/admin/reviews', icon: '💬' },
   { label: 'Search Products', to: '/admin/search', icon: '🔍' },
+  { label: 'Theme Builder', to: '/admin/theme-builder', icon: '🎨' },
+  { label: 'Banner Management', to: '/admin/banners', icon: '🖼️' },
+  { label: 'Analytics', to: '/admin/analytics', icon: '📈' },
+  { label: 'Orders Management', to: '/admin/orders', icon: '🧾' },
+  { label: 'Users Management', to: '/admin/users', icon: '👥' },
   { label: 'Send Mail', to: '/admin/send-mail', icon: '✉️' },
-  { label: 'Storefront Settings', to: '/admin/settings', icon: '🎨' },
+  { label: 'Storefront Settings', to: '/admin/settings', icon: '🪄' },
 ];
 
 export default function Sidebar({ onNavigate, className = '' }) {
