@@ -13,14 +13,14 @@ const selectorBaseClasses =
   'flex-1 rounded-2xl border px-4 py-4 text-left transition focus:outline-none focus-visible:ring-2';
 
 export default function AdminSettings() {
-  const { theme, homeVersion, updateSettings } = useTheme();
+  const { theme, homeVersion, productVersion, updateSettings } = useTheme();
   const { showToast } = useAdminContext();
-  const [form, setForm] = useState({ theme, homeVersion });
+  const [form, setForm] = useState({ theme, homeVersion, productVersion });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setForm({ theme, homeVersion });
-  }, [theme, homeVersion]);
+    setForm({ theme, homeVersion, productVersion });
+  }, [theme, homeVersion, productVersion]);
 
   const handleThemeSelect = (value) => {
     setForm((prev) => ({ ...prev, theme: value }));
@@ -28,6 +28,10 @@ export default function AdminSettings() {
 
   const handleHomeVersionSelect = (value) => {
     setForm((prev) => ({ ...prev, homeVersion: value }));
+  };
+
+  const handleProductVersionSelect = (value) => {
+    setForm((prev) => ({ ...prev, productVersion: value }));
   };
 
   const handleSubmit = async (event) => {
@@ -44,7 +48,9 @@ export default function AdminSettings() {
   const summaryItems = [
     { label: 'Total themes available', value: 2 },
     { label: 'Home layouts', value: 3 },
-    { label: 'Preview URL', value: `/preview/home-${form.homeVersion}` },
+    { label: 'Product layouts', value: 3 },
+    { label: 'Home preview URL', value: `/preview/home-${form.homeVersion}` },
+    { label: 'Products page', value: `Products ${form.productVersion.toUpperCase()}` },
   ];
 
   return (
@@ -185,6 +191,42 @@ export default function AdminSettings() {
                   Editorial luxury with immersive lifestyle storytelling.
                 </span>
               </label>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Products page layout</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Control how the catalog experience appears, including filters and merchandising style.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {['v1', 'v2', 'v3'].map((version) => (
+                <label
+                  key={version}
+                  className={`${selectorBaseClasses} cursor-pointer ${
+                    form.productVersion === version
+                      ? 'border-primary bg-primary/10 text-primary shadow-sm dark:border-primary-light dark:bg-primary/10'
+                      : 'border-slate-200 text-slate-600 hover:border-primary/60 dark:border-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="product-version"
+                    value={version}
+                    checked={form.productVersion === version}
+                    onChange={() => handleProductVersionSelect(version)}
+                    className="sr-only"
+                  />
+                  <span className="block text-sm font-semibold">Products Version {version.slice(-1)}</span>
+                  <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                    {version === 'v1'
+                      ? 'Classic search-driven list with inline filters.'
+                      : version === 'v2'
+                        ? 'Modern grid with dropdown filters and load more action.'
+                        : 'Editorial showcase with sticky dropdown and quick view.'}
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
         </div>
