@@ -1,12 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchProducts as fetchProductsFromApi, mapProduct } from '../../utils/api.js';
+import { useTheme } from '../../context/ThemeContext.jsx';
 
 const AdminContext = createContext(null);
 
 const PRODUCTS_STORAGE_KEY = 'admin_products';
 const REVIEWS_STORAGE_KEY = 'reviews';
-const DARK_MODE_STORAGE_KEY = 'admin_dark_mode';
-
 const DEFAULT_REVIEWS = [
   { id: 1, productId: 2, user: 'Alice', rating: 5, comment: 'Great!', created_at: '2025-10-20' },
   { id: 2, productId: 4, user: 'Bob', rating: 4, comment: 'Pretty good.' },
@@ -17,10 +16,8 @@ export function AdminProvider({ children }) {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [reviews, setReviews] = useState([]);
   const [toasts, setToasts] = useState([]);
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(DARK_MODE_STORAGE_KEY) === 'true';
-  });
+  const { theme, toggleTheme } = useTheme();
+  const darkMode = theme === 'dark';
 
   const normalizeProducts = useCallback((items) => {
     if (!Array.isArray(items)) return [];
@@ -93,14 +90,6 @@ export function AdminProvider({ children }) {
     }
   }, [reviews]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(DARK_MODE_STORAGE_KEY, darkMode ? 'true' : 'false');
-    } catch (error) {
-      console.error('Failed to persist admin theme preference', error);
-    }
-  }, [darkMode]);
-
   const addProduct = useCallback(
     (product) => {
       persistProducts([...products, product]);
@@ -135,10 +124,6 @@ export function AdminProvider({ children }) {
     setReviews((current) => current.map((review) => (review.id === id ? { ...review, ...updates } : review)));
   }, []);
 
-  const toggleDarkMode = useCallback(() => {
-    setDarkMode((prev) => !prev);
-  }, []);
-
   const showToast = useCallback((message, variant = 'success') => {
     const id = Date.now();
     setToasts((current) => [...current, { id, message, variant }]);
@@ -160,7 +145,7 @@ export function AdminProvider({ children }) {
       toasts,
       showToast,
       darkMode,
-      toggleDarkMode,
+      toggleDarkMode: toggleTheme,
       refreshProducts: loadProducts,
     }),
     [
@@ -175,7 +160,7 @@ export function AdminProvider({ children }) {
       toasts,
       showToast,
       darkMode,
-      toggleDarkMode,
+      toggleTheme,
       loadProducts,
     ],
   );

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
+import HomeV2 from './pages/HomeV2.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
 import Cart from './pages/Cart.jsx';
 import Favorites from './pages/Favorites.jsx';
@@ -21,6 +22,8 @@ import Orders from './admin/pages/Orders.jsx';
 import Users from './admin/pages/Users.jsx';
 import SendMail from './admin/pages/SendMail.jsx';
 import AdminLogin from './admin/pages/Login.jsx';
+import AdminSettings from './admin/pages/AdminSettings.jsx';
+import { useTheme } from './context/ThemeContext.jsx';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -46,9 +49,12 @@ function AdminProtectedRoute({ children }) {
 
 function StorefrontLayout() {
   const location = useLocation();
+  const { homeVersion } = useTheme();
+
+  const SelectedHome = homeVersion === 'v2' ? HomeV2 : Home;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
       <Header />
       <main className="flex-1">
         <AnimatePresence mode="wait" initial={false}>
@@ -64,7 +70,22 @@ function StorefrontLayout() {
                   transition={{ duration: 0.3 }}
                   className="px-4 pb-16 pt-24 sm:px-6 lg:px-12"
                 >
-                  <Home />
+                  <SelectedHome />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/preview/home-v2"
+              element={
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="px-4 pb-16 pt-24 sm:px-6 lg:px-12"
+                >
+                  <HomeV2 />
                 </motion.div>
               }
             />
@@ -209,6 +230,7 @@ export default function App() {
         <Route path="reviews" element={<Reviews />} />
         <Route path="search" element={<AdminSearch />} />
         <Route path="send-mail" element={<SendMail />} />
+        <Route path="settings" element={<AdminSettings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
       <Route path="/*" element={<StorefrontLayout />} />

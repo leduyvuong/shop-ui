@@ -11,6 +11,7 @@ const titles = {
   '/admin/reviews': 'User Reviews',
   '/admin/search': 'Search Products',
   '/admin/send-mail': 'Send Mail Campaign',
+  '/admin/settings': 'Storefront Settings',
 };
 
 export default function Header({ onToggleSidebar }) {

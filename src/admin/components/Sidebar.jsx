@@ -10,6 +10,7 @@ const navItems = [
   { label: 'User Reviews', to: '/admin/reviews', icon: '💬' },
   { label: 'Search Products', to: '/admin/search', icon: '🔍' },
   { label: 'Send Mail', to: '/admin/send-mail', icon: '✉️' },
+  { label: 'Storefront Settings', to: '/admin/settings', icon: '🎨' },
 ];
 
 export default function Sidebar({ onNavigate, className = '' }) {
