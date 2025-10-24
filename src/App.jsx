@@ -27,6 +27,9 @@ import Users from './admin/pages/Users.jsx';
 import SendMail from './admin/pages/SendMail.jsx';
 import AdminLogin from './admin/pages/Login.jsx';
 import AdminSettings from './admin/pages/AdminSettings.jsx';
+import ThemeBuilder from './admin/pages/ThemeBuilder.jsx';
+import Banners from './admin/pages/Banners.jsx';
+import Analytics from './admin/pages/Analytics.jsx';
 import { useTheme } from './context/ThemeContext.jsx';
 
 const pageVariants = {
@@ -255,6 +258,9 @@ export default function App() {
         <Route path="orders" element={<Orders />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="search" element={<AdminSearch />} />
+        <Route path="theme-builder" element={<ThemeBuilder />} />
+        <Route path="banners" element={<Banners />} />
+        <Route path="analytics" element={<Analytics />} />
         <Route path="send-mail" element={<SendMail />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />

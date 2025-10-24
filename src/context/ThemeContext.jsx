@@ -3,6 +3,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 const STORAGE_KEY = 'siteSettings';
 const HOME_VERSIONS = new Set(['v1', 'v2', 'v3']);
 const PRODUCT_VERSIONS = new Set(['v1', 'v2', 'v3']);
+const THEME_SETTINGS_STORAGE_KEY = 'themeSettings';
+
+const defaultThemeSettings = {
+  primaryColor: '#6366f1',
+  secondaryColor: '#10b981',
+  backgroundColor: '#f9fafb',
+  font: 'Inter',
+  radius: 12,
+};
 
 const defaultSettings = {
   theme: 'light',
@@ -20,11 +29,14 @@ const ThemeContext = createContext({
   theme: defaultSettings.theme,
   homeVersion: defaultSettings.homeVersion,
   productVersion: defaultSettings.productVersion,
+  themeSettings: defaultThemeSettings,
   setTheme: () => {},
   setHomeVersion: () => {},
   setProductVersion: () => {},
   toggleTheme: () => {},
   updateSettings: () => {},
+  updateThemeSettings: () => {},
+  resetThemeSettings: () => {},
 });
 
 const isBrowser = typeof window !== 'undefined';
@@ -48,8 +60,36 @@ const readSettings = () => {
   }
 };
 
+const readThemeSettings = () => {
+  if (!isBrowser) return defaultThemeSettings;
+  try {
+    const stored = window.localStorage.getItem(THEME_SETTINGS_STORAGE_KEY);
+    if (!stored) return defaultThemeSettings;
+    const parsed = JSON.parse(stored);
+    return {
+      ...defaultThemeSettings,
+      ...parsed,
+      radius: Number.isFinite(parsed?.radius) ? Math.max(0, Math.min(32, Number(parsed.radius))) : defaultThemeSettings.radius,
+    };
+  } catch (error) {
+    console.error('Failed to read design theme settings', error);
+    return defaultThemeSettings;
+  }
+};
+
+const applyThemeVariables = (settings) => {
+  if (!isBrowser) return;
+  const root = window.document.documentElement;
+  root.style.setProperty('--theme-primary-color', settings.primaryColor);
+  root.style.setProperty('--theme-secondary-color', settings.secondaryColor);
+  root.style.setProperty('--theme-surface-color', settings.backgroundColor);
+  root.style.setProperty('--theme-font-family', `${settings.font}, var(--theme-font-fallback)`);
+  root.style.setProperty('--theme-radius', `${settings.radius}px`);
+};
+
 export function ThemeProvider({ children }) {
   const [settings, setSettings] = useState(() => readSettings());
+  const [themeSettings, setThemeSettings] = useState(() => readThemeSettings());
   const initialLoad = useRef(true);
 
   useEffect(() => {
@@ -84,10 +124,28 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     if (!isBrowser) return;
+    try {
+      window.localStorage.setItem(THEME_SETTINGS_STORAGE_KEY, JSON.stringify(themeSettings));
+    } catch (error) {
+      console.error('Failed to persist design theme settings', error);
+    }
+  }, [themeSettings]);
+
+  useEffect(() => {
+    if (!isBrowser) return;
     const root = window.document.documentElement;
     root.classList.toggle('dark', settings.theme === 'dark');
     root.style.colorScheme = settings.theme === 'dark' ? 'dark' : 'light';
   }, [settings.theme]);
+
+  useEffect(() => {
+    applyThemeVariables(themeSettings);
+    if (isBrowser) {
+      document.body.style.backgroundColor = themeSettings.backgroundColor;
+      document.body.style.fontFamily = `${themeSettings.font}, var(--theme-font-fallback)`;
+      document.body.style.setProperty('--theme-radius', `${themeSettings.radius}px`);
+    }
+  }, [themeSettings]);
 
   const setTheme = useCallback((theme) => {
     setSettings((prev) => ({ ...prev, theme: theme === 'dark' ? 'dark' : 'light' }));
@@ -115,26 +173,55 @@ export function ThemeProvider({ children }) {
     }));
   }, []);
 
+  const updateThemeSettings = useCallback((updates) => {
+    setThemeSettings((prev) => {
+      const next = {
+        ...prev,
+        ...updates,
+      };
+      const sanitized = {
+        ...next,
+        radius: Number.isFinite(next.radius) ? Math.max(0, Math.min(32, Number(next.radius))) : prev.radius,
+      };
+      applyThemeVariables(sanitized);
+      return sanitized;
+    });
+  }, []);
+
+  const resetThemeSettings = useCallback(() => {
+    setThemeSettings(defaultThemeSettings);
+    applyThemeVariables(defaultThemeSettings);
+    if (isBrowser) {
+      window.localStorage.removeItem(THEME_SETTINGS_STORAGE_KEY);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       theme: settings.theme,
       homeVersion: settings.homeVersion,
       productVersion: settings.productVersion,
+      themeSettings,
       setTheme,
       setHomeVersion,
       setProductVersion,
       toggleTheme,
       updateSettings,
+      updateThemeSettings,
+      resetThemeSettings,
     }),
     [
       settings.homeVersion,
       settings.productVersion,
       settings.theme,
+      themeSettings,
       setTheme,
       setHomeVersion,
       setProductVersion,
       toggleTheme,
       updateSettings,
+      updateThemeSettings,
+      resetThemeSettings,
     ],
   );
 
