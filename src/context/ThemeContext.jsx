@@ -2,20 +2,27 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 const STORAGE_KEY = 'siteSettings';
 const HOME_VERSIONS = new Set(['v1', 'v2', 'v3']);
+const PRODUCT_VERSIONS = new Set(['v1', 'v2', 'v3']);
 
 const defaultSettings = {
   theme: 'light',
   homeVersion: 'v1',
+  productVersion: 'v1',
 };
 
 const sanitizeHomeVersion = (value, fallback = defaultSettings.homeVersion) =>
   HOME_VERSIONS.has(value) ? value : fallback;
 
+const sanitizeProductVersion = (value, fallback = defaultSettings.productVersion) =>
+  PRODUCT_VERSIONS.has(value) ? value : fallback;
+
 const ThemeContext = createContext({
   theme: defaultSettings.theme,
   homeVersion: defaultSettings.homeVersion,
+  productVersion: defaultSettings.productVersion,
   setTheme: () => {},
   setHomeVersion: () => {},
+  setProductVersion: () => {},
   toggleTheme: () => {},
   updateSettings: () => {},
 });
@@ -33,6 +40,7 @@ const readSettings = () => {
       ...parsed,
       theme: parsed?.theme === 'dark' ? 'dark' : 'light',
       homeVersion: sanitizeHomeVersion(parsed?.homeVersion),
+      productVersion: sanitizeProductVersion(parsed?.productVersion),
     };
   } catch (error) {
     console.error('Failed to read theme settings', error);
@@ -89,6 +97,10 @@ export function ThemeProvider({ children }) {
     setSettings((prev) => ({ ...prev, homeVersion: sanitizeHomeVersion(version, prev.homeVersion) }));
   }, []);
 
+  const setProductVersion = useCallback((version) => {
+    setSettings((prev) => ({ ...prev, productVersion: sanitizeProductVersion(version, prev.productVersion) }));
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setSettings((prev) => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }));
   }, []);
@@ -99,6 +111,7 @@ export function ThemeProvider({ children }) {
       ...updates,
       theme: updates?.theme === 'dark' ? 'dark' : updates?.theme === 'light' ? 'light' : prev.theme,
       homeVersion: sanitizeHomeVersion(updates?.homeVersion, prev.homeVersion),
+      productVersion: sanitizeProductVersion(updates?.productVersion, prev.productVersion),
     }));
   }, []);
 
@@ -106,12 +119,23 @@ export function ThemeProvider({ children }) {
     () => ({
       theme: settings.theme,
       homeVersion: settings.homeVersion,
+      productVersion: settings.productVersion,
       setTheme,
       setHomeVersion,
+      setProductVersion,
       toggleTheme,
       updateSettings,
     }),
-    [settings.homeVersion, settings.theme, setTheme, setHomeVersion, toggleTheme, updateSettings],
+    [
+      settings.homeVersion,
+      settings.productVersion,
+      settings.theme,
+      setTheme,
+      setHomeVersion,
+      setProductVersion,
+      toggleTheme,
+      updateSettings,
+    ],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

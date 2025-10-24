@@ -11,6 +11,9 @@ import Favorites from './pages/Favorites.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import Search from './pages/Search.jsx';
+import ProductsV1 from './pages/ProductsV1.jsx';
+import ProductsV2 from './pages/ProductsV2.jsx';
+import ProductsV3 from './pages/ProductsV3.jsx';
 import Account from './pages/Account.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import { AdminProvider } from './admin/context/AdminContext.jsx';
@@ -50,9 +53,11 @@ function AdminProtectedRoute({ children }) {
 
 function StorefrontLayout() {
   const location = useLocation();
-  const { homeVersion } = useTheme();
+  const { homeVersion, productVersion } = useTheme();
 
   const SelectedHome = homeVersion === 'v3' ? HomeV3 : homeVersion === 'v2' ? HomeV2 : Home;
+  const SelectedProducts =
+    productVersion === 'v3' ? ProductsV3 : productVersion === 'v2' ? ProductsV2 : ProductsV1;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
@@ -137,7 +142,7 @@ function StorefrontLayout() {
                   transition={{ duration: 0.3 }}
                   className="px-4 pb-16 pt-24 sm:px-6 lg:px-12"
                 >
-                  <Search />
+                  <SelectedProducts />
                 </motion.div>
               }
             />

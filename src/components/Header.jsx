@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import SearchBar from './SearchBar.jsx';
+import ProductFiltersDropdown from './ProductFiltersDropdown.jsx';
 import { readJson, upsertUniqueValue } from '../utils/storage.js';
 
 const navLinks = [
@@ -30,6 +31,8 @@ export default function Header() {
 
   const toggleMenu = () => setOpen((prev) => !prev);
   const closeMenu = () => setOpen(false);
+
+  const isProductsPage = location.pathname.startsWith('/products');
 
   const handleLogout = () => {
     logout();
@@ -122,7 +125,7 @@ export default function Header() {
               >
                 Logout
               </button>
-            ) : (
+              ) : (
               <NavLink
                 to="/login"
                 className={({ isActive }) =>
@@ -135,6 +138,9 @@ export default function Header() {
               >
                 Login
               </NavLink>
+            )}
+            {isProductsPage && (
+              <ProductFiltersDropdown className="ml-4" />
             )}
             <div className="flex items-center gap-3">
               <Link to="/favorites" className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-200">
@@ -232,6 +238,11 @@ export default function Header() {
                 >
                   Login
                 </NavLink>
+              )}
+              {isProductsPage && (
+                <div className="pt-2">
+                  <ProductFiltersDropdown className="w-full" />
+                </div>
               )}
               <div className="flex items-center justify-between rounded-2xl bg-slate-100 px-4 py-3 dark:bg-slate-800">
                 <Link
